@@ -1,3 +1,16 @@
+
+### Starwars REST API with Flask-SQLAlchemy using 4GA's template
+
+
+Use this snapshot to create your own version of this workspace and test out the database:
+
+https://gitpod.io/#snapshot/8a3b6212-8181-470d-aeb7-13a03b1721c7
+
+
+
+
+##### Template Info #####
+
 # Flask Boilerplate for Profesional Development
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/from-referrer/)
