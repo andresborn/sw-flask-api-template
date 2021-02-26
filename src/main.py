@@ -8,8 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
-#from models import Person
+from models import db, User, Planet, Person, Favorite
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -30,14 +29,173 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+# Create User
+@app.route("/user", methods=["POST"])
+def create_user():
 
-    return jsonify(response_body), 200
+    username = request.json["username"]
+    email = request.json["email"]
+
+    new_user = User(username, email)
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify(new_user.serialize()), 200
+
+
+# Get User
+@app.route("/user/<username>", methods=["GET"])
+def get_user(username):
+    current_user = User.query.filter_by(username=f"{username}").first()
+    request_body = current_user.serialize()
+    return jsonify(request_body), 200
+
+
+# Create Planet
+@app.route("/planet", methods=["POST"])
+def create_planet():
+
+    name = request.json["name"]
+    rotation_period = request.json["rotation_period"]
+    orbital_period = request.json["orbital_period"]
+    diameter = request.json["diameter"]
+    climate = request.json["climate"]
+    gravity = request.json["gravity"]
+    terrain = request.json["terrain"]
+    surface_water = request.json["surface_water"]
+    population = request.json["population"]
+    pic = request.json["pic"]
+    url = request.json["url"]
+
+    new_planet = Planet(
+        name,
+        population,
+        gravity,
+        climate,
+        terrain,
+        surface_water,
+        diameter,
+        orbital_period,
+        rotation_period,
+        pic,
+        url,
+    )
+
+    db.session.add(new_planet)
+    db.session.commit()
+
+    return jsonify(new_planet.serialize()), 200
+
+
+# Get Planet
+@app.route("/planet/<id>", methods=["GET"])
+def get_planet(id):
+    current_planet = Planet.query.filter_by(id=f"{id}").first()
+    request_body = current_planet.serialize()
+    return jsonify(request_body), 200
+
+
+# Get All Planets
+@app.route("/planet", methods=["GET"])
+def get_all_planets():
+
+    all_planets = Planet.query.all()
+
+    request_body = list(map(lambda planet: planet.serialize(), all_planets))
+
+    return jsonify(request_body), 200
+
+
+# Create Person
+@app.route("/person", methods=["POST"])
+def create_person():
+
+    name = request.json["name"]
+    birth_year = request.json["birth_year"]
+    homeworld = request.json["homeworld"]
+    eye_color = request.json["eye_color"]
+    gender = request.json["gender"]
+    hair_color = request.json["hair_color"]
+    height = request.json["height"]
+    mass = request.json["mass"]
+    skin_color = request.json["skin_color"]
+    pic = request.json["pic"]
+    url = request.json["url"]
+
+    new_person = Person(
+        name,
+        birth_year,
+        homeworld,
+        eye_color,
+        gender,
+        hair_color,
+        height,
+        mass,
+        skin_color,
+        pic,
+        url,
+    )
+
+    db.session.add(new_person)
+    db.session.commit()
+
+    return jsonify(new_person.serialize()), 200
+
+
+# Get Person
+@app.route("/person/<id>", methods=["GET"])
+def get_person(id):
+    current_person = Person.query.filter_by(id=f"{id}").first()
+    request_body = current_person.serialize()
+    return jsonify(request_body), 200
+
+
+# Get All People
+@app.route("/person", methods=["GET"])
+def get_all_people():
+
+    all_people = Person.query.all()
+    request_body = list(map(lambda person: person.serialize(), all_people))
+    return jsonify(request_body), 200
+
+
+# Create Favorite
+@app.route("/favorite", methods=["POST"])
+def create_favorite():
+
+    username = request.json["username"]
+    planet_name = request.json["planet_name"]
+    person_name = request.json["person_name"]
+
+    new_favorite = Favorite(username, planet_name, person_name)
+
+    db.session.add(new_favorite)
+    db.session.commit()
+
+    return jsonify(new_favorite.serialize()), 200
+
+
+# Get User Favorites
+@app.route("/favorite/<username>", methods=["GET"])
+def get_user_favorites(username):
+
+    user_favorites = Favorite.query.filter_by(username=f"{username}").all()
+    favorites_list = list(map(lambda favorite: favorite.serialize(), user_favorites))
+
+    return jsonify(favorites_list), 200
+
+
+# Delete Favorite
+@app.route("/favorite/<username>/<id>", methods=["DELETE"])
+def delete_favorite(username, id):
+
+    favorite = Favorite.query.filter_by(username=f"{username}", id=f"{id}").first()
+    db.session.delete(favorite)
+    db.session.commit()
+    return jsonify({"deleted": favorite.serialize()})
+
 
 # this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
