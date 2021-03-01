@@ -77,6 +77,10 @@ def create_planet():
     pic = request.json["pic"]
     url = request.json["url"]
 
+    check_planet = Planet.query.filter_by(name=f"{name}").first()
+    if check_planet:
+        return jsonify({"error": "Planet already exists"})
+
     new_planet = Planet(
         name,
         population,
