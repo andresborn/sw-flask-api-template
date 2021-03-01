@@ -79,7 +79,7 @@ def create_planet():
 
     check_planet = Planet.query.filter_by(name=f"{name}").first()
     if check_planet:
-        return jsonify({"error": "Planet already exists"})
+        return jsonify({"error": "Planet already exists"}), 401
 
     new_planet = Planet(
         name,
@@ -136,6 +136,10 @@ def create_person():
     pic = request.json["pic"]
     url = request.json["url"]
 
+    check_person = Person.query.filter_by(name=f"{name}").first()
+    if check_person:
+        return jsonify({"error": "Person already exists"}), 401
+
     new_person = Person(
         name,
         birth_year,
@@ -181,6 +185,13 @@ def create_favorite():
     planet_name = request.json["planet_name"]
     person_name = request.json["person_name"]
 
+    # Prevent Favorite Duplicates
+    favorites_list = Favorite.query.filter_by(username=f"{username}").all()
+    favorites_list = list(map(lambda x: x.serialize(), favorites_list))
+    check_if_favorite_exists = list(filter(lambda fav: fav['planet_name'] == planet_name or fav['person_name'] == person_name, favorites_list))
+    if len(check_if_favorite_exists) > 0:
+        return jsonify({"error": "Favorite already exists"}), 401
+
     new_favorite = Favorite(username, planet_name, person_name)
 
     db.session.add(new_favorite)
@@ -204,6 +215,10 @@ def get_user_favorites(username):
 def delete_favorite(username, id):
 
     favorite = Favorite.query.filter_by(username=f"{username}", id=f"{id}").first()
+
+    if not favorite:
+        return jsonify({"error": "Favorite does not exist"}), 401
+
     db.session.delete(favorite)
     db.session.commit()
     return jsonify({"deleted": favorite.serialize()})
