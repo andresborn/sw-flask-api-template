@@ -37,6 +37,14 @@ def create_user():
     username = request.json["username"]
     email = request.json["email"]
 
+    check_username = User.query.filter_by(username=f"{username}").first()
+    if check_username:
+        return jsonify({"error": "Username already exists"}), 401
+    
+    check_email = User.query.filter_by(email=f"{email}").first()
+    if check_email:
+        return jsonify({"error": "Email already exists"}), 401
+
     new_user = User(username, email)
 
     db.session.add(new_user)
