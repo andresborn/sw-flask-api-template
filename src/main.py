@@ -11,6 +11,7 @@ from admin import setup_admin
 from models import db, User, Planet, Person, Favorite
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import datetime
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -63,6 +64,38 @@ def register():
 
     return jsonify(new_user.serialize()), 200
 
+# Log In User
+@app.route('/login', methods=[POST])
+def login():
+    if request.method == "POST":
+        username = request.json["username"]
+        password = request.json["password"]
+
+        # Validate
+        if not username:
+            return jsonify({"error": "Username Invalid"}), 400
+        if not password:
+            return jsonify({"error": "Password Invalid"}), 400
+        
+        user = User.query.filter_by(username=username).first()
+
+        if not user:
+            return jsonify({"error": "User not found"}), 400
+        
+        if not check_password_hash(user.password, password):
+            return jsonify({"error": "Wrong password"}), 400
+        
+        # Create Access Token
+        expiration_date = datetime.timedelta(days=3)
+        access_token = create_access_token(identity=username, expires_delta=expiration_date)
+
+        request_body = {
+            "user": user.serialize(),
+            "token": access_token,
+            "expiration": expiration_date
+        }
+
+        return jsonify(request_body), 200
 
 # Get User
 @app.route("/user/<username>", methods=["GET"])
