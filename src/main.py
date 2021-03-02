@@ -12,6 +12,7 @@ from models import db, User, Planet, Person, Favorite
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import datetime
+from secret import super_secret
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -21,6 +22,9 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
+
+# Setup the Flask-JWT-Extended extension
+app.config["JWT_SECRET_KEY"] = super_secret
 jwt = JWTManager(app)
 
 # Handle/serialize errors like a JSON object
@@ -65,7 +69,7 @@ def register():
     return jsonify(new_user.serialize()), 200
 
 # Log In User
-@app.route('/login', methods=[POST])
+@app.route('/login', methods=["POST"])
 def login():
     if request.method == "POST":
         username = request.json["username"]
@@ -96,6 +100,14 @@ def login():
         }
 
         return jsonify(request_body), 200
+
+# Access to Profile
+@app.route("/user/profile", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
 # Get User
 @app.route("/user/<username>", methods=["GET"])
