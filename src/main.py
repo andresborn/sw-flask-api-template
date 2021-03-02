@@ -20,6 +20,7 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
+jwt = JWTManager(app)
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -31,23 +32,31 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-
-# Create User
-@app.route("/user", methods=["POST"])
-def create_user():
-
+# Register User
+@app.route("/register", methods=["POST"])
+def register():
     username = request.json["username"]
     email = request.json["email"]
+    password = request.json["password"]
+
+    if not username:
+        return jsonify({"error": "Username required"})
+    if not email:
+        return jsonify({"error": "Email required"})
+    if not password:
+        return jsonify({"error": "Password required"})
 
     check_username = User.query.filter_by(username=f"{username}").first()
     if check_username:
-        return jsonify({"error": "Username already exists"}), 401
+        return jsonify({"error": "Username already exists"}), 400
     
     check_email = User.query.filter_by(email=f"{email}").first()
     if check_email:
-        return jsonify({"error": "Email already exists"}), 401
+        return jsonify({"error": "Email already exists"}), 400
 
-    new_user = User(username, email)
+    hashed_password = generate_password_hash(password)
+
+    new_user = User(username, email, password=hashed_password)
 
     db.session.add(new_user)
     db.session.commit()
@@ -81,7 +90,7 @@ def create_planet():
 
     check_planet = Planet.query.filter_by(name=f"{name}").first()
     if check_planet:
-        return jsonify({"error": "Planet already exists"}), 401
+        return jsonify({"error": "Planet already exists"}), 400
 
     new_planet = Planet(
         name,
@@ -140,7 +149,7 @@ def create_person():
 
     check_person = Person.query.filter_by(name=f"{name}").first()
     if check_person:
-        return jsonify({"error": "Person already exists"}), 401
+        return jsonify({"error": "Person already exists"}), 400
 
     new_person = Person(
         name,
@@ -192,7 +201,7 @@ def create_favorite():
     favorites_list = list(map(lambda x: x.serialize(), favorites_list))
     check_if_favorite_exists = list(filter(lambda fav: fav['planet_name'] == planet_name or fav['person_name'] == person_name, favorites_list))
     if len(check_if_favorite_exists) > 0:
-        return jsonify({"error": "Favorite already exists"}), 401
+        return jsonify({"error": "Favorite already exists"}), 400
 
     new_favorite = Favorite(username, planet_name, person_name)
 
@@ -219,7 +228,7 @@ def delete_favorite(username, id):
     favorite = Favorite.query.filter_by(username=f"{username}", id=f"{id}").first()
 
     if not favorite:
-        return jsonify({"error": "Favorite does not exist"}), 401
+        return jsonify({"error": "Favorite does not exist"}), 400
 
     db.session.delete(favorite)
     db.session.commit()
