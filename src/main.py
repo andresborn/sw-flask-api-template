@@ -95,19 +95,10 @@ def login():
 
         request_body = {
             "user": user.serialize(),
-            "token": access_token,
-            "expiration": expiration_date
+            "token": access_token
         }
 
         return jsonify(request_body), 200
-
-# Access to Profile
-@app.route("/user/profile", methods=["GET"])
-@jwt_required()
-def protected():
-    # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
 
 # Get User
 @app.route("/user/<username>", methods=["GET"])
@@ -258,9 +249,12 @@ def create_favorite():
 
 # Get User Favorites
 @app.route("/favorite/<username>", methods=["GET"])
-def get_user_favorites(username):
+@jwt_required()
+def get_user_favorites_protected(username):
 
-    user_favorites = Favorite.query.filter_by(username=f"{username}").all()
+    current_user = get_jwt_identity()
+
+    user_favorites = Favorite.query.filter_by(username=f"{current_user}").all()
     favorites_list = list(map(lambda favorite: favorite.serialize(), user_favorites))
 
     return jsonify(favorites_list), 200
