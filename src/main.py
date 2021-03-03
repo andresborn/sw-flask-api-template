@@ -224,18 +224,21 @@ def get_all_people():
     return jsonify(request_body), 200
 
 
-# Create Favorite
+# Create Favorite / Protected
 @app.route("/favorite", methods=["POST"])
-def create_favorite():
+@jwt_required()
+def create_user_favorite():
 
-    username = request.json["username"]
+    current_user = get_jwt_identity()
+
+    username = current_user
     planet_name = request.json["planet_name"]
     person_name = request.json["person_name"]
 
     # Prevent Favorite Duplicates
     favorites_list = Favorite.query.filter_by(username=f"{username}").all()
     favorites_list = list(map(lambda x: x.serialize(), favorites_list))
-    check_if_favorite_exists = list(filter(lambda fav: fav['planet_name'] == planet_name or fav['person_name'] == person_name, favorites_list))
+    check_if_favorite_exists = list(filter(lambda fav: fav['planet_name'] == planet_name and fav['person_name'] == person_name, favorites_list))
     if len(check_if_favorite_exists) > 0:
         return jsonify({"error": "Favorite already exists"}), 400
 
@@ -247,10 +250,10 @@ def create_favorite():
     return jsonify(new_favorite.serialize()), 200
 
 
-# Get User Favorites
-@app.route("/favorite/<username>", methods=["GET"])
+# Get User Favorites / Protected
+@app.route("/favorite", methods=["GET"])
 @jwt_required()
-def get_user_favorites_protected(username):
+def get_user_favorites():
 
     current_user = get_jwt_identity()
 
@@ -260,11 +263,15 @@ def get_user_favorites_protected(username):
     return jsonify(favorites_list), 200
 
 
-# Delete Favorite
-@app.route("/favorite/<username>/<id>", methods=["DELETE"])
-def delete_favorite(username, id):
+# Delete Favorite / Protected
+@app.route("/favorite", methods=["DELETE"])
+@jwt_required()
+def delete_favorite():
 
-    favorite = Favorite.query.filter_by(username=f"{username}", id=f"{id}").first()
+    current_user = get_jwt_identity()
+    favorite_id = request.json["id"]
+
+    favorite = Favorite.query.filter_by(username=f"{current_user}", id=f"{favorite_id}").first()
 
     if not favorite:
         return jsonify({"error": "Favorite does not exist"}), 400
