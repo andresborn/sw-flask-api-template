@@ -9,8 +9,7 @@ For this API we are implemented:
 
 Use this snapshot to create your own version of this workspace and test out the database:
 
-https://gitpod.io/#snapshot/0851ddd5-9d4f-4fe2-864f-3141d4addc93
-
+https://gitpod.io/#snapshot/02b705bf-018a-4e6b-9077-c7e4877e3978
 
 
 
