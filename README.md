@@ -4,7 +4,7 @@
 
 Use this snapshot to create your own version of this workspace and test out the database:
 
-https://gitpod.io/#snapshot/8a3b6212-8181-470d-aeb7-13a03b1721c7
+https://gitpod.io/#snapshot/0851ddd5-9d4f-4fe2-864f-3141d4addc93
 
 
 
